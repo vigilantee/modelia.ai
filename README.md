@@ -315,6 +315,11 @@ Approximately 60% of code generated with AI assistance (Claude/ChatGPT), with hu
 ✅ Docker Compose
 ✅ Documentation
 
+### Snapshots
+
+![alt text](image1.png)
+![alt text](image2.png)
+
 ## 📞 Support
 
 For issues or questions:
