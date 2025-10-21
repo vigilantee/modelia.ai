@@ -3,10 +3,13 @@ import { GenerationModel } from "../models/generation.model";
 import { aiService } from "../services/ai.service";
 import { AppError, asyncHandler } from "../middleware/error.middleware";
 import { AuthRequest } from "../middleware/auth.middleware";
-import { z } from "zod";
+import Joi from "joi";
 
-const createGenerationSchema = z.object({
-  prompt: z.string().min(1, "Prompt is required").max(500, "Prompt too long"),
+const createGenerationSchema = Joi.object({
+  prompt: Joi.string().min(1).max(500).required(),
+  style: Joi.string()
+    .valid("realistic", "artistic", "vintage", "modern")
+    .required(),
 });
 
 export const GenerationController = {
@@ -15,12 +18,12 @@ export const GenerationController = {
       throw new AppError(400, "Image file is required");
     }
 
-    const validation = createGenerationSchema.safeParse(req.body);
-    if (!validation.success) {
-      throw new AppError(400, validation.error.errors[0].message);
+    const validation = createGenerationSchema.validate(req.body);
+    if (validation.error) {
+      throw new AppError(400, validation.error.details[0].message);
     }
 
-    const { prompt } = validation.data;
+    const { prompt, style } = validation.value;
     const userId = req.user!.userId;
 
     const inputImageUrl = `/uploads/${req.file.filename}`;
@@ -28,6 +31,7 @@ export const GenerationController = {
     const generation = await GenerationModel.create({
       userId,
       prompt,
+      style,
       inputImageUrl,
     });
 
@@ -37,6 +41,7 @@ export const GenerationController = {
         id: generation.id,
         status: generation.status,
         prompt: generation.prompt,
+        style: generation.style,
         inputImageUrl: generation.input_image_url,
         createdAt: generation.created_at,
       },
@@ -67,9 +72,11 @@ export const GenerationController = {
         id: generation.id,
         status: generation.status,
         prompt: generation.prompt,
+        style: generation.style,
         inputImageUrl: generation.input_image_url,
         outputImageUrl: generation.output_image_url,
         errorMessage: generation.error_message,
+        retryCount: generation.retry_count,
         createdAt: generation.created_at,
         completedAt: generation.completed_at,
       },
@@ -78,16 +85,19 @@ export const GenerationController = {
 
   getRecent: asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
-    const generations = await GenerationModel.findByUserId(userId, 5);
+    const limit = parseInt(req.query.limit as string) || 5;
+    const generations = await GenerationModel.findByUserId(userId, limit);
 
     res.json({
       generations: generations.map((g) => ({
         id: g.id,
         status: g.status,
         prompt: g.prompt,
+        style: g.style,
         inputImageUrl: g.input_image_url,
         outputImageUrl: g.output_image_url,
         errorMessage: g.error_message,
+        retryCount: g.retry_count,
         createdAt: g.created_at,
         completedAt: g.completed_at,
       })),

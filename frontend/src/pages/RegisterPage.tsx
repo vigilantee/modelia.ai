@@ -1,13 +1,23 @@
-import { useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { Sparkles } from "lucide-react";
+import { useState, FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { Sparkles } from 'lucide-react';
+
+// Keeping this interface for reference, though the usage is simplified below.
+interface ErrorInterface {
+  name: string;
+  response?: {
+    data?: {
+      error: string;
+    };
+  };
+}
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const { register } = useAuth();
@@ -15,15 +25,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError('Password must be at least 6 characters');
       return;
     }
 
@@ -31,11 +41,10 @@ export default function RegisterPage() {
 
     try {
       await register(email, password);
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error || "Registration failed. Please try again."
-      );
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const typedError = err as ErrorInterface;
+      setError(typedError.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -61,10 +70,7 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
@@ -79,10 +85,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -116,21 +119,14 @@ export default function RegisterPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full"
-            >
-              {isLoading ? "Creating account..." : "Create account"}
+            <button type="submit" disabled={isLoading} className="btn-primary w-full">
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
-            >
+            Already have an account?{' '}
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
               Sign in
             </Link>
           </p>

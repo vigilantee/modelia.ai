@@ -25,16 +25,18 @@ export const initDatabase = async () => {
       );
     `);
 
-    // Create generations table
+    // Create generations table with style field
     await client.query(`
       CREATE TABLE IF NOT EXISTS generations (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         prompt TEXT NOT NULL,
+        style VARCHAR(100) DEFAULT 'realistic',
         input_image_url TEXT NOT NULL,
         output_image_url TEXT,
         status VARCHAR(50) NOT NULL DEFAULT 'processing',
         error_message TEXT,
+        retry_count INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP
       );
