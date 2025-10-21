@@ -1,11 +1,11 @@
-import { Pool } from "pg";
+import { Pool } from 'pg';
 
 const pool = new Pool({
-  host: "localhost",
+  host: 'localhost',
   port: 5432,
-  database: "ai_studio",
-  user: "abhishekjha",
-  password: "password",
+  database: 'ai_studio',
+  user: 'abhishekjha',
+  password: 'password',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -25,16 +25,18 @@ export const initDatabase = async () => {
       );
     `);
 
-    // Create generations table
+    // Create generations table with style field
     await client.query(`
       CREATE TABLE IF NOT EXISTS generations (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         prompt TEXT NOT NULL,
+        style VARCHAR(100) DEFAULT 'realistic',
         input_image_url TEXT NOT NULL,
         output_image_url TEXT,
         status VARCHAR(50) NOT NULL DEFAULT 'processing',
         error_message TEXT,
+        retry_count INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP
       );
@@ -46,16 +48,16 @@ export const initDatabase = async () => {
       ON generations(user_id, created_at DESC);
     `);
 
-    console.log("✅ Database initialized successfully");
+    console.log('✅ Database initialized successfully');
   } catch (error) {
-    console.error("Database initialization error:", error);
+    console.error('Database initialization error:', error);
     throw error;
   } finally {
     client.release();
   }
 };
 
-export const query = (text: string, params?: any[]) => {
+export const query = (text: string, params?: unknown[]) => {
   return pool.query(text, params);
 };
 

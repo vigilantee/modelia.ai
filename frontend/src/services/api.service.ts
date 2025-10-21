@@ -1,21 +1,17 @@
-import axios, { AxiosError } from "axios";
-import type {
-  AuthResponse,
-  Generation,
-  CreateGenerationRequest,
-} from "../types";
+import axios, { AxiosError } from 'axios';
+import type { AuthResponse, Generation, CreateGenerationRequest, User } from '../types'; // Added User type
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = window.localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -26,8 +22,8 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      window.localStorage.removeItem('token');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -35,7 +31,7 @@ api.interceptors.response.use(
 
 export const authService = {
   async register(email: string, password: string): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/register", {
+    const response = await api.post<AuthResponse>('/auth/register', {
       email,
       password,
     });
@@ -43,49 +39,46 @@ export const authService = {
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/login", {
+    const response = await api.post<AuthResponse>('/auth/login', {
       email,
       password,
     });
     return response.data;
   },
 
-  async getMe(): Promise<{ user: any }> {
-    const response = await api.get("/auth/me");
+  async getMe(): Promise<{ user: User }> {
+    const response = await api.get<{ user: User }>('/auth/me');
     return response.data;
   },
 };
 
 export const generationService = {
   async create(
-    data: CreateGenerationRequest
+    data: CreateGenerationRequest,
+    signal?: AbortSignal
   ): Promise<{ generation: Generation }> {
     const formData = new FormData();
-    formData.append("image", data.image);
-    formData.append("prompt", data.prompt);
+    formData.append('image', data.image);
+    formData.append('prompt', data.prompt);
+    formData.append('style', data.style);
 
-    const response = await api.post<{ generation: Generation }>(
-      "/generations",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await api.post<{ generation: Generation }>('/generations', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      signal,
+    });
     return response.data;
   },
 
   async getById(id: number): Promise<{ generation: Generation }> {
-    const response = await api.get<{ generation: Generation }>(
-      `/generations/${id}`
-    );
+    const response = await api.get<{ generation: Generation }>(`/generations/${id}`);
     return response.data;
   },
 
-  async getRecent(): Promise<{ generations: Generation[] }> {
+  async getRecent(limit: number = 5): Promise<{ generations: Generation[] }> {
     const response = await api.get<{ generations: Generation[] }>(
-      "/generations/recent"
+      `/generations/recent?limit=${limit}`
     );
     return response.data;
   },

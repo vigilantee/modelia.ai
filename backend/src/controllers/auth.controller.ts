@@ -1,31 +1,42 @@
-import { Request, Response } from "express";
-import { UserModel } from "../models/user.model";
-import { generateToken } from "../utils/jwt.utils";
-import { AppError, asyncHandler } from "../middleware/error.middleware";
-import { z } from "zod";
+import { Request, Response } from 'express';
+import { UserModel } from '../models/user.model';
+import { generateToken } from '../utils/jwt.utils';
+import { AppError, asyncHandler } from '../middleware/error.middleware';
+import Joi from 'joi';
 
-const registerSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+const registerSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is required',
+  }),
+  password: Joi.string().min(6).required().messages({
+    'string.min': 'Password must be at least 6 characters',
+    'any.required': 'Password is required',
+  }),
 });
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
+const loginSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is required',
+  }),
+  password: Joi.string().required().messages({
+    'any.required': 'Password is required',
+  }),
 });
 
 export const AuthController = {
   register: asyncHandler(async (req: Request, res: Response) => {
-    const validation = registerSchema.safeParse(req.body);
-    if (!validation.success) {
-      throw new AppError(400, validation.error.errors[0].message);
+    const validation = registerSchema.validate(req.body);
+    if (validation.error) {
+      throw new AppError(400, validation.error.details[0].message);
     }
 
-    const { email, password } = validation.data;
+    const { email, password } = validation.value;
 
     const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
-      throw new AppError(409, "User with this email already exists");
+      throw new AppError(409, 'User with this email already exists');
     }
 
     const user = await UserModel.create({ email, password });
@@ -36,7 +47,7 @@ export const AuthController = {
     });
 
     res.status(201).json({
-      message: "User registered successfully",
+      message: 'User registered successfully',
       user: {
         id: user.id,
         email: user.email,
@@ -46,16 +57,16 @@ export const AuthController = {
   }),
 
   login: asyncHandler(async (req: Request, res: Response) => {
-    const validation = loginSchema.safeParse(req.body);
+    const validation = loginSchema.validate(req.body);
     if (!validation.success) {
-      throw new AppError(400, validation.error.errors[0].message);
+      throw new AppError(400, validation.error!.details[0].message);
     }
 
-    const { email, password } = validation.data;
+    const { email, password } = validation.value;
 
     const user = await UserModel.findByEmail(email);
     if (!user) {
-      throw new AppError(401, "Invalid email or password");
+      throw new AppError(401, 'Invalid email or password');
     }
 
     const isPasswordValid = await UserModel.verifyPassword(
@@ -63,7 +74,7 @@ export const AuthController = {
       user.password_hash
     );
     if (!isPasswordValid) {
-      throw new AppError(401, "Invalid email or password");
+      throw new AppError(401, 'Invalid email or password');
     }
 
     const token = generateToken({
@@ -72,7 +83,7 @@ export const AuthController = {
     });
 
     res.json({
-      message: "Login successful",
+      message: 'Login successful',
       user: {
         id: user.id,
         email: user.email,
@@ -83,9 +94,9 @@ export const AuthController = {
 
   me: asyncHandler(async (req: any, res: Response) => {
     const user = await UserModel.findById(req.user.userId);
-
+    
     if (!user) {
-      throw new AppError(404, "User not found");
+      throw new AppError(404, 'User not found');
     }
 
     res.json({

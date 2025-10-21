@@ -1,12 +1,22 @@
-import { useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { Sparkles } from "lucide-react";
+import { useState, FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { Sparkles } from 'lucide-react';
+
+// Keeping this interface for reference, though the usage is simplified below.
+interface ErrorInterface {
+  name: string;
+  response?: {
+    data?: {
+      error: string;
+    };
+  };
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
@@ -14,14 +24,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
 
     try {
       await login(email, password);
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Login failed. Please try again.");
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const typedError = err as ErrorInterface;
+      setError(typedError.response?.data?.error || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -47,10 +58,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
@@ -65,10 +73,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -82,21 +87,14 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
+            <button type="submit" disabled={isLoading} className="btn-primary w-full">
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
-            >
+            Don't have an account?{' '}
+            <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
               Sign up
             </Link>
           </p>

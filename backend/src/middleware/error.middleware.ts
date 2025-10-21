@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
 
 export class AppError extends Error {
   constructor(
@@ -15,7 +15,8 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  // FIX: Prefix unused 'next' argument with an underscore to satisfy ESLint rule
+  _next: NextFunction
 ) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
@@ -24,16 +25,18 @@ export const errorHandler = (
     });
   }
 
-  console.error("Unexpected error:", err);
+  console.error('Unexpected error:', err);
 
   return res.status(500).json({
-    error: "Internal server error",
+    error: 'Internal server error',
     status: 500,
   });
 };
 
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  // FIX: Replace 'any' with 'void' since the promise resolves to the middleware chain,
+  // or use 'unknown' if the return value is needed later, but 'void' is safest here.
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);

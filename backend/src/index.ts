@@ -1,10 +1,10 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.routes";
-import generationRoutes from "./routes/generation.routes";
-import { errorHandler } from "./middleware/error.middleware";
-import { initDatabase } from "./config/database";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.routes';
+import generationRoutes from './routes/generation.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { initDatabase } from './config/database';
 
 dotenv.config();
 
@@ -17,15 +17,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('uploads'));
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/generations", generationRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/generations', generationRoutes);
 
 // Health check
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Error handling
@@ -40,7 +40,7 @@ const startServer = async () => {
       console.log(`📊 Environment: ${process.env.NODE_ENV}`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
