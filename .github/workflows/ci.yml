@@ -29,15 +29,15 @@ jobs:
     steps:
       - name: Checkout code
         # UPGRADE: v3 -> v4
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         # UPGRADE: v3 -> v4
-        uses: actions/setup-node@v4 
+        uses: actions/setup-node@v4
         with:
           node-version: "18"
-          # NOTE: Removed cache-dependency-path to avoid the previous unresolved path error 
-          # when using the built-in cache with actions/setup-node@v4, 
+          # NOTE: Removed cache-dependency-path to avoid the previous unresolved path error
+          # when using the built-in cache with actions/setup-node@v4,
           # as the `npm ci` step is in a subdirectory.
           cache: "npm"
 
@@ -63,7 +63,6 @@ jobs:
         with:
           name: backend-coverage
           path: backend/coverage
-
 
   frontend-tests:
     name: Frontend Tests
@@ -101,8 +100,7 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
 
-
-    e2e-tests:
+  e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
