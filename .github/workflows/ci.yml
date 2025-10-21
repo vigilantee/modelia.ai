@@ -39,7 +39,7 @@ jobs:
           # NOTE: Removed cache-dependency-path to avoid the previous unresolved path error
           # when using the built-in cache with actions/setup-node@v4,
           # as the `npm ci` step is in a subdirectory.
-          cache: "npm"
+          # cache: "npm"
 
       - name: Install dependencies
         working-directory: ./backend
@@ -79,7 +79,7 @@ jobs:
         with:
           node-version: "18"
           # NOTE: Removed cache-dependency-path for the same reason as backend-tests
-          cache: "npm"
+          # cache: "npm"
 
       - name: Install dependencies
         working-directory: ./frontend
