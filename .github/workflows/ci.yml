@@ -28,10 +28,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # This action version is fine for now
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v3 # This action version is fine for now
         with:
           node-version: "18"
           cache: "npm"
@@ -54,111 +54,115 @@ jobs:
           NODE_ENV: test
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        # 🐛 FIX: Changed to v4
+        uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage
 
-  frontend-tests:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
+---
+frontend-tests:
+  name: Frontend Tests
+  runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18"
+        cache: "npm"
+        cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
 
-      - name: Run linter
-        working-directory: ./frontend
-        run: npm run lint
+    - name: Run linter
+      working-directory: ./frontend
+      run: npm run lint
 
-      - name: Run tests
-        working-directory: ./frontend
-        run: npm test
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm test
 
-      - name: Upload coverage
-        uses: actions/upload-artifact@v3
-        with:
-          name: frontend-coverage
-          path: frontend/coverage
+    - name: Upload coverage
+      # 🐛 FIX: Changed to v4
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-coverage
+        path: frontend/coverage
+---
+e2e-tests:
+  name: E2E Tests
+  runs-on: ubuntu-latest
+  needs: [backend-tests, frontend-tests]
 
-  e2e-tests:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
+  services:
+    postgres:
+      image: postgres:14
+      env:
+        POSTGRES_DB: ai_studio_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
+      ports:
+        - 5432:5432
 
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: ai_studio_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
 
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm ci
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
 
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
+    - name: Install Playwright
+      working-directory: ./frontend
+      run: npx playwright install --with-deps
 
-      - name: Install Playwright
-        working-directory: ./frontend
-        run: npx playwright install --with-deps
+    - name: Start backend
+      working-directory: ./backend
+      run: npm run dev &
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ai_studio_test
+        JWT_SECRET: test-secret-key
+        PORT: 3001
 
-      - name: Start backend
-        working-directory: ./backend
-        run: npm run dev &
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ai_studio_test
-          JWT_SECRET: test-secret-key
-          PORT: 3001
+    - name: Start frontend
+      working-directory: ./frontend
+      run: npm run dev &
+      env:
+        VITE_API_URL: http://localhost:3001
 
-      - name: Start frontend
-        working-directory: ./frontend
-        run: npm run dev &
-        env:
-          VITE_API_URL: http://localhost:3001
+    - name: Wait for servers
+      run: |
+        npx wait-on http://localhost:3001/api/health
+        npx wait-on http://localhost:3000
 
-      - name: Wait for servers
-        run: |
-          npx wait-on http://localhost:3001/api/health
-          npx wait-on http://localhost:3000
+    - name: Run E2E tests
+      working-directory: ./frontend
+      run: npx playwright test
 
-      - name: Run E2E tests
-        working-directory: ./frontend
-        run: npx playwright test
-
-      - name: Upload E2E results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: playwright-report
-          path: frontend/playwright-report
+    - name: Upload E2E results
+      if: always()
+      # 🐛 FIX: Changed to v4
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: frontend/playwright-report
