@@ -1,21 +1,19 @@
-import { Response } from "express";
-import { GenerationModel } from "../models/generation.model";
-import { aiService } from "../services/ai.service";
-import { AppError, asyncHandler } from "../middleware/error.middleware";
-import { AuthRequest } from "../middleware/auth.middleware";
-import Joi from "joi";
+import { Response } from 'express';
+import { GenerationModel } from '../models/generation.model';
+import { aiService } from '../services/ai.service';
+import { AppError, asyncHandler } from '../middleware/error.middleware';
+import { AuthRequest } from '../middleware/auth.middleware';
+import Joi from 'joi';
 
 const createGenerationSchema = Joi.object({
   prompt: Joi.string().min(1).max(500).required(),
-  style: Joi.string()
-    .valid("realistic", "artistic", "vintage", "modern")
-    .required(),
+  style: Joi.string().valid('realistic', 'artistic', 'vintage', 'modern').required(),
 });
 
 export const GenerationController = {
   create: asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.file) {
-      throw new AppError(400, "Image file is required");
+      throw new AppError(400, 'Image file is required');
     }
 
     const validation = createGenerationSchema.validate(req.body);
@@ -36,7 +34,7 @@ export const GenerationController = {
     });
 
     res.status(201).json({
-      message: "Generation started",
+      message: 'Generation started',
       generation: {
         id: generation.id,
         status: generation.status,
@@ -54,17 +52,17 @@ export const GenerationController = {
     const generationId = parseInt(req.params.id);
 
     if (isNaN(generationId)) {
-      throw new AppError(400, "Invalid generation ID");
+      throw new AppError(400, 'Invalid generation ID');
     }
 
     const generation = await GenerationModel.findById(generationId);
 
     if (!generation) {
-      throw new AppError(404, "Generation not found");
+      throw new AppError(404, 'Generation not found');
     }
 
     if (generation.user_id !== req.user!.userId) {
-      throw new AppError(403, "Access denied");
+      throw new AppError(403, 'Access denied');
     }
 
     res.json({
@@ -115,21 +113,21 @@ async function processGeneration(
 
     if (result.success) {
       await GenerationModel.update(generationId, {
-        status: "completed",
+        status: 'completed',
         outputImageUrl: result.outputImageUrl,
       });
     } else {
       await GenerationModel.update(generationId, {
-        status: "failed",
+        status: 'failed',
         errorMessage: result.error,
       });
     }
   } catch (error) {
-    console.error("Error processing generation:", error);
+    console.error('Error processing generation:', error);
 
     await GenerationModel.update(generationId, {
-      status: "failed",
-      errorMessage: "Unexpected error during processing",
+      status: 'failed',
+      errorMessage: 'Unexpected error during processing',
     });
   }
 }

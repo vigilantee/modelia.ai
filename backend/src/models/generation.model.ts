@@ -1,6 +1,6 @@
-import { query } from "../config/database";
+import { query } from '../config/database';
 
-export type GenerationStatus = "processing" | "completed" | "failed";
+export type GenerationStatus = 'processing' | 'completed' | 'failed';
 
 export interface Generation {
   id: number;
@@ -43,7 +43,7 @@ export const GenerationModel = {
   },
 
   async findById(id: number): Promise<Generation | null> {
-    const result = await query("SELECT * FROM generations WHERE id = $1", [id]);
+    const result = await query('SELECT * FROM generations WHERE id = $1', [id]);
 
     return result.rows[0] || null;
   },
@@ -62,7 +62,7 @@ export const GenerationModel = {
 
   async update(id: number, data: UpdateGenerationDTO): Promise<Generation> {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramCount = 1;
 
     if (data.status) {
@@ -85,7 +85,7 @@ export const GenerationModel = {
       values.push(data.retryCount);
     }
 
-    if (data.status === "completed" || data.status === "failed") {
+    if (data.status === 'completed' || data.status === 'failed') {
       updates.push(`completed_at = CURRENT_TIMESTAMP`);
     }
 
@@ -93,7 +93,7 @@ export const GenerationModel = {
 
     const result = await query(
       `UPDATE generations 
-       SET ${updates.join(", ")} 
+       SET ${updates.join(', ')} 
        WHERE id = $${paramCount} 
        RETURNING *`,
       values
@@ -103,6 +103,6 @@ export const GenerationModel = {
   },
 
   async delete(id: number): Promise<void> {
-    await query("DELETE FROM generations WHERE id = $1", [id]);
+    await query('DELETE FROM generations WHERE id = $1', [id]);
   },
 };

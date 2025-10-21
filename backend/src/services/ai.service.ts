@@ -9,10 +9,8 @@ export class AIService {
   private readonly MIN_DELAY = 2000;
   private readonly MAX_DELAY = 4000;
 
-  async generateImage(
-    inputImageUrl: string,
-    prompt: string
-  ): Promise<GenerationResult> {
+  async generateImage(inputImageUrl: string, prompt: string): Promise<GenerationResult> {
+    console.log('prompt is....', prompt);
     const delay = this.getRandomDelay();
     await this.sleep(delay);
 
@@ -30,9 +28,7 @@ export class AIService {
   }
 
   private getRandomDelay(): number {
-    return Math.floor(
-      Math.random() * (this.MAX_DELAY - this.MIN_DELAY) + this.MIN_DELAY
-    );
+    return Math.floor(Math.random() * (this.MAX_DELAY - this.MIN_DELAY) + this.MIN_DELAY);
   }
 
   private shouldSimulateError(): boolean {
@@ -41,11 +37,11 @@ export class AIService {
 
   private getRandomError(): string {
     const errors = [
-      "AI model is currently overloaded. Please try again.",
-      "Failed to process the image. The image format may be unsupported.",
-      "Generation timeout. The request took too long to process.",
-      "Rate limit exceeded. Please wait before trying again.",
-      "Internal AI service error. Our team has been notified.",
+      'AI model is currently overloaded. Please try again.',
+      'Failed to process the image. The image format may be unsupported.',
+      'Generation timeout. The request took too long to process.',
+      'Rate limit exceeded. Please wait before trying again.',
+      'Internal AI service error. Our team has been notified.',
     ];
 
     return errors[Math.floor(Math.random() * errors.length)];
