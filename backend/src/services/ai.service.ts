@@ -10,7 +10,7 @@ export class AIService {
   private readonly MAX_DELAY = 4000;
 
   async generateImage(inputImageUrl: string, prompt: string): Promise<GenerationResult> {
-    console.log('prompt is....', prompt);
+    // console.log('prompt is....', prompt);
     const delay = this.getRandomDelay();
     await this.sleep(delay);
 
